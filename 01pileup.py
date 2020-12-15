@@ -35,8 +35,8 @@ maxBP = args.rend
 
 
 
-start = int(start1) - 1
-n = (int(maxBP) - int(start)) + 1
+start = int(start1) - 1 #if a sam file is provided add 1 due to 1 indexing
+n = (int(maxBP) - int(start)) + 1 #region length
 n2 = n - 1
 
 # Export Functions
@@ -68,6 +68,7 @@ qualG = [0.0] * n
 qualT = [0.0] * n
 
 
+#count for each base on each aligned read in the target region
 
 bam2 = pysam.AlignmentFile(bamfile, "rb")
 for read in bam2:
