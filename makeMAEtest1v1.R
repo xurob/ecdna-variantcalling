@@ -60,6 +60,8 @@ library(seqinr)
 #'  
 
 
+
+
 importMito.explicit <- function(Afile, Cfile, Gfile, Tfile,
                                 coverageFile, referenceAlleleFile){
   
@@ -90,7 +92,7 @@ importMito.explicit <- function(Afile, Cfile, Gfile, Tfile,
   covmat2 <- Matrix::sparseMatrix(
     i = c(cov[[1]]),
     j = c(as.numeric(cov[[2]])),
-    x = c(cov[[3]],maxpos)
+    x = c(cov[[3]])
   )
   covmat <- covmat2[minpos:maxpos,, drop = FALSE]
   
