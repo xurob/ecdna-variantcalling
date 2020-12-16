@@ -60,7 +60,8 @@ library(seqinr)
 #'  
 
 
-
+#counting starts at 1: add int(startingpos) to Position for final Variant
+#more memory efficient than makeMAEalternat.R
 
 importMito.explicit <- function(Afile, Cfile, Gfile, Tfile,
                                 coverageFile, referenceAlleleFile){
