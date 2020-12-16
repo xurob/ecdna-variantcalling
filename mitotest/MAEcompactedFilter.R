@@ -13,7 +13,6 @@ library(RColorBrewer)
 
 "%ni%" <- Negate("%in%")
 
-# Import Caleb's genotype calls
 raw <- readRDS("/Users/robin/Documents/projects/supervisedgenotypingpipeline/testdir/MAEopen.rds")
 
 #  clonal definitions; make a vector for quick lookup
@@ -84,7 +83,7 @@ variantScoresClones %>% filter(log10p > 3) %>% dim()
 keepVariants <- unique(variantScoresClones[variantScoresClones$log10p > 3, "Variant"])
 length(keepVariants)
 keepVariants <- keepVariants[-c(11,24,6)]
-#-c(11,24,6)
+#-c(11,24,6) remove 310 ...
 # Only keep variants that match this
 boo <- rownames(af3) %in% keepVariants
 af3 <- data.matrix(af3[boo,])
@@ -112,7 +111,6 @@ colorsUniverse <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), inve
 cols <- sample(colorsUniverse, length(unique_clone_colors))
 names(cols) <- unique_clone_colors
 
-# That's it! Now make a heatmap
 ha1 <- HeatmapAnnotation(df = annodf2[,c("clone_color"), drop = FALSE],
                          col = list(clone_color = cols)
 )
@@ -126,7 +124,6 @@ Heatmap((af4[,as.character(annodf2$Cell.Name)]), column_title = "AF 310564filter
         top_annotation = ha1,
         name = "AF")
 dev.off()
-# New heatmap but with actual allele frequencies
 png(file="/Users/robin/Documents/projects/supervisedgenotypingpipeline/testdir/mitophyl_sqrttransform_310564filtered.png", height = 15, width = 20, res = 600, units= "cm")  
 par(cex.main=0.8,mar=c(1,1,1,1))
 Heatmap((af3[,as.character(annodf2$Cell.Name)])^(1/2), column_title = "sqrt AF 310564filtered",
