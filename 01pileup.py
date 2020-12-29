@@ -56,16 +56,18 @@ def writeSparseMatrix2(mid, vec1, vec2):
 
 # BAQ
 # initialize with a pseudo count to avoid dividing by zero
-countsA = [0.00000001] * n 
-countsC = [0.00000001] * n 
-countsG = [0.00000001] * n 
-countsT = [0.00000001] * n 
+countsAfw = [0.00000001] * n 
+countsCfw = [0.00000001] * n 
+countsGfw = [0.00000001] * n 
+countsTfw = [0.00000001] * n 
 
 
-qualA = [0.0] * n
-qualC = [0.0] * n
-qualG = [0.0] * n
-qualT = [0.0] * n
+countsArv = [0.00000001] * n 
+countsCrv = [0.00000001] * n 
+countsGrv = [0.00000001] * n 
+countsTrv = [0.00000001] * n 
+
+
 
 
 #count for each base on each aligned read in the target region
@@ -76,38 +78,44 @@ for read in bam2:
 	quality = read.query_qualities
 	align_qual_read = read.mapping_quality
 	for qpos, refpos in read.get_aligned_pairs(True):
-		if qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+		if is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 			if(seq[qpos] == "A" and quality[qpos] > base_qual):
-				qualA[int(refpos)-int(start)] += quality[qpos]
-				countsA[(refpos)-int(start)] += 1
+				countsAfw[(refpos)-int(start)] += 1
 			elif(seq[qpos] == "C" and quality[qpos] > base_qual):
-				qualC[(refpos)-int(start)] += quality[qpos]
-				countsC[(refpos)-int(start)] += 1
+				countsCfw[(refpos)-int(start)] += 1
 			elif(seq[qpos] == "G" and quality[qpos] > base_qual):
-				qualG[(refpos)-int(start)] += quality[qpos]
-				countsG[(refpos)-int(start)] += 1
+				countsGfw[(refpos)-int(start)] += 1
 			elif(seq[qpos] == "T" and quality[qpos] > base_qual):
-				qualT[(refpos)-int(start)] += quality[qpos]
-				countsT[(refpos)-int(start)] += 1
-			
-meanQualA = [round(x/y,1) for x, y in zip(qualA, countsA)]
-meanQualC = [round(x/y,1) for x, y in zip(qualC, countsC)]
-meanQualG = [round(x/y,1) for x, y in zip(qualG, countsG)]
-meanQualT = [round(x/y,1) for x, y in zip(qualT, countsT)]
+				countsTfw[(refpos)-int(start)] += 1
+        if is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+            if(seq[qpos] == "A" and quality[qpos] > base_qual):
+				countsArv[(refpos)-int(start)] += 1
+			elif(seq[qpos] == "C" and quality[qpos] > base_qual):
+				countsCvr[(refpos)-int(start)] += 1
+			elif(seq[qpos] == "G" and quality[qpos] > base_qual):
+				countsGvr[(refpos)-int(start)] += 1
+			elif(seq[qpos] == "T" and quality[qpos] > base_qual):
+				countsTrv[(refpos)-int(start)] += 1
 
-countsA = [ int(round(elem)) for elem in countsA ]
-countsC = [ int(round(elem)) for elem in countsC ]
-countsG = [ int(round(elem)) for elem in countsG ]
-countsT = [ int(round(elem)) for elem in countsT ]
+
+countsAfw = [ int(round(elem)) for elem in countsAfw ]
+countsCfw = [ int(round(elem)) for elem in countsCfw ]
+countsGfw = [ int(round(elem)) for elem in countsGfw ]
+countsTfw = [ int(round(elem)) for elem in countsTfw ]
+
+countsArv = [ int(round(elem)) for elem in countsArv ]
+countsCrv = [ int(round(elem)) for elem in countsCrv ]
+countsGrv = [ int(round(elem)) for elem in countsGrv ]
+countsTrv = [ int(round(elem)) for elem in countsTrv ]
 
 
 # Allele Counts
 
-writeSparseMatrix2("A", countsA, meanQualA)
-writeSparseMatrix2("C", countsC, meanQualC)
-writeSparseMatrix2("G", countsG, meanQualG)
-writeSparseMatrix2("T", countsT, meanQualT)
+writeSparseMatrix2("A", countsAfw, countsArv)
+writeSparseMatrix2("C", countsCfw, countsCrv)
+writeSparseMatrix2("G", countsGfw, countsGrv)
+writeSparseMatrix2("T", countsTfw, countsTrv)
 
-zipped_list = zip(list(countsA),list(countsC),list(countsG),list(countsT))
+zipped_list = zip(list(countsAfw),list(countsCfw),list(countsGfw),list(countsTrv),countsArv),list(countsCrv),list(countsGrv),list(countsTrv))
 sums = [sum(item) for item in zipped_list]
 writeSparseMatrix("coverage", sums)
