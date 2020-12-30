@@ -86,29 +86,29 @@ for read in bam2:
 		if is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 			if(seq[qpos] == "A" and quality[qpos] > base_qual):
 				countsAfw[(refpos)-int(start)] += 1
-                covcount +=1
+				covcount +=1
 			elif(seq[qpos] == "C" and quality[qpos] > base_qual):
 				countsCfw[(refpos)-int(start)] += 1
-                covcount +=1
+				covcount +=1
 			elif(seq[qpos] == "G" and quality[qpos] > base_qual):
 				countsGfw[(refpos)-int(start)] += 1
-                covcount +=1
+				covcount +=1
 			elif(seq[qpos] == "T" and quality[qpos] > base_qual):
 				countsTfw[(refpos)-int(start)] += 1
-                covcount +=1
+				covcount +=1
         if is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
             if(seq[qpos] == "A" and quality[qpos] > base_qual):
 				countsArv[(refpos)-int(start)] += 1
-                covcount +=1
+				covcount +=1
 			elif(seq[qpos] == "C" and quality[qpos] > base_qual):
 				countsCvr[(refpos)-int(start)] += 1
-                covcount +=1
+				covcount +=1
 			elif(seq[qpos] == "G" and quality[qpos] > base_qual):
 				countsGvr[(refpos)-int(start)] += 1
-                covcount +=1
+				covcount +=1
 			elif(seq[qpos] == "T" and quality[qpos] > base_qual):
 				countsTrv[(refpos)-int(start)] += 1
-                covcount +=1
+				covcount +=1
 
 
 countsAfw = [ int(round(elem)) for elem in countsAfw ]
