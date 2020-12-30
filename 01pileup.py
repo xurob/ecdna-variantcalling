@@ -53,6 +53,11 @@ def writeSparseMatrix2(mid, vec1, vec2):
 			if(vec1[i] > 0):
 				V.write(str(i+start+1)+","+sample+","+str(vec1[i])+","+str(vec2[i])+"\n")
 
+def writeSparseMatrix3(mid, vec):
+	with open(outpre + "."+mid+".txt","w") as V:
+		for i in range(0,n2):
+			if(vec[i] > 0):
+				V.write(sample+","+str(vec[i])+"\n")
 
 # BAQ
 # initialize with a pseudo count to avoid dividing by zero
@@ -67,7 +72,7 @@ countsCrv = [0.00000001] * n
 countsGrv = [0.00000001] * n 
 countsTrv = [0.00000001] * n 
 
-
+covcount = 0
 
 
 #count for each base on each aligned read in the target region
@@ -81,21 +86,29 @@ for read in bam2:
 		if is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 			if(seq[qpos] == "A" and quality[qpos] > base_qual):
 				countsAfw[(refpos)-int(start)] += 1
+                covcount +=1
 			elif(seq[qpos] == "C" and quality[qpos] > base_qual):
 				countsCfw[(refpos)-int(start)] += 1
+                covcount +=1
 			elif(seq[qpos] == "G" and quality[qpos] > base_qual):
 				countsGfw[(refpos)-int(start)] += 1
+                covcount +=1
 			elif(seq[qpos] == "T" and quality[qpos] > base_qual):
 				countsTfw[(refpos)-int(start)] += 1
+                covcount +=1
         if is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
             if(seq[qpos] == "A" and quality[qpos] > base_qual):
 				countsArv[(refpos)-int(start)] += 1
+                covcount +=1
 			elif(seq[qpos] == "C" and quality[qpos] > base_qual):
 				countsCvr[(refpos)-int(start)] += 1
+                covcount +=1
 			elif(seq[qpos] == "G" and quality[qpos] > base_qual):
 				countsGvr[(refpos)-int(start)] += 1
+                covcount +=1
 			elif(seq[qpos] == "T" and quality[qpos] > base_qual):
 				countsTrv[(refpos)-int(start)] += 1
+                covcount +=1
 
 
 countsAfw = [ int(round(elem)) for elem in countsAfw ]
@@ -119,3 +132,5 @@ writeSparseMatrix2("T", countsTfw, countsTrv)
 zipped_list = zip(list(countsAfw),list(countsCfw),list(countsGfw),list(countsTrv),countsArv),list(countsCrv),list(countsGrv),list(countsTrv))
 sums = [sum(item) for item in zipped_list]
 writeSparseMatrix("coverage", sums)
+depth = covcount/n #n = region length
+writeSparseMatrix3("depth", depth)
