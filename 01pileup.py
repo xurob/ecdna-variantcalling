@@ -274,8 +274,22 @@ else:
 		depth = covcount/n #n = region length
 		writeSparseMatrix3("depth", depth)
 
-
+# =============================================================================
+# make tab delimited reference txt file from fasta
+# =============================================================================
 	
+refmat = [] * n
+tempindex = 0
+with open("filename") as fasta:
+    for line in fasta:  
+       if ">" not in line:
+		   for ch in line:
+			   if tempindex < maxBP-1:  
+				      refmat[tempindex] = str(ch)
+					  tempindex += 1
+with open("ref.txt","w") as fasta:
+				for i in range(start,maxBP):
+					fasta.write(str(i)+"\t"+str(refmat[i-1])+"\n")
 # =============================================================================
 # combines all pileupfiles
 # =============================================================================
