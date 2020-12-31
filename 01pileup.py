@@ -18,6 +18,7 @@ parser.add_argument("-o", "--output", help="output path/to/outputdir/")
 parser.add_argument("-rs", "--rstart", help="define starting position", type=int)
 parser.add_argument("-re", "--rend", help="define ending position", type=int)
 parser.add_argument("-n", "--name", help="name for main output")
+parser.add_argument("-ref", "--reference", help = "please supply a reference file as fasta")
 parser.add_argument("-bq", "--basequality", help="min basequality for filtering", type=float, default=0)
 parser.add_argument("-ebq", "--excludebasequality", help="exclude basequality from outputfiles, default = true", type=bool, default= True)
 parser.add_argument("-al", "--alignmentquality", help="min basequality for filtering", type=float, default=0)
@@ -34,6 +35,7 @@ ebq = args.excludebasequality
 alignment_quality = args.alignmentquality
 start1 = args.rstart
 maxBP = args.rend
+reffile = args.reference
 
 # =============================================================================
 # piles up the counts for every bam file in dir
@@ -44,7 +46,7 @@ if ebq == True:
 		start = int(start1) - 1 #if a sam file is provided add 1 due to 1 indexing
 		n = (int(maxBP) - int(start)) + 1 #region length
 		n2 = n - 1
-		sample = string(filename)
+		sample = str(filename)
 		# Export Functions
 		def writeSparseMatrix(mid, vec):
 			with open(outpre + "."+mid+".txt","w") as V:
@@ -91,7 +93,7 @@ if ebq == True:
 			quality = read.query_qualities
 			align_qual_read = read.mapping_quality
 			for qpos, refpos in read.get_aligned_pairs(True):
-				if is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+				if read.is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 					if(seq[qpos] == "A" and quality[qpos] > base_qual):
 						countsAfw[(refpos)-int(start)] += 1
 						covcount +=1
@@ -104,15 +106,15 @@ if ebq == True:
 					elif(seq[qpos] == "T" and quality[qpos] > base_qual):
 						countsTfw[(refpos)-int(start)] += 1
 						covcount +=1
-		        if is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
-		            if(seq[qpos] == "A" and quality[qpos] > base_qual):
+				if read.is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+					if(seq[qpos] == "A" and quality[qpos] > base_qual):
 						countsArv[(refpos)-int(start)] += 1
 						covcount +=1
 					elif(seq[qpos] == "C" and quality[qpos] > base_qual):
-						countsCvr[(refpos)-int(start)] += 1
+						countsCrv[(refpos)-int(start)] += 1
 						covcount +=1
 					elif(seq[qpos] == "G" and quality[qpos] > base_qual):
-						countsGvr[(refpos)-int(start)] += 1
+						countsGrv[(refpos)-int(start)] += 1
 						covcount +=1
 					elif(seq[qpos] == "T" and quality[qpos] > base_qual):
 						countsTrv[(refpos)-int(start)] += 1
@@ -137,7 +139,7 @@ if ebq == True:
 		writeSparseMatrix2("G", countsGfw, countsGrv)
 		writeSparseMatrix2("T", countsTfw, countsTrv)
 		
-		zipped_list = zip(list(countsAfw),list(countsCfw),list(countsGfw),list(countsTrv),countsArv),list(countsCrv),list(countsGrv),list(countsTrv))
+		zipped_list = zip(list(countsAfw),list(countsCfw),list(countsGfw),list(countsTrv),list(countsArv),list(countsCrv),list(countsGrv),list(countsTrv))
 		sums = [sum(item) for item in zipped_list]
 		writeSparseMatrix("coverage", sums)
 		depth = covcount/n #n = region length
@@ -148,7 +150,7 @@ else:
 		start = int(start1) - 1 #if a sam file is provided add 1 due to 1 indexing
 		n = (int(maxBP) - int(start)) + 1 #region length
 		n2 = n - 1
-		sample = string(filename)
+		sample = str(filename)
 		# Export Functions
 		def writeSparseMatrix(mid, vec):
 			with open(outpre + "."+mid+".txt","w") as V:
@@ -204,7 +206,7 @@ else:
 			quality = read.query_qualities
 			align_qual_read = read.mapping_quality
 			for qpos, refpos in read.get_aligned_pairs(True):
-				if is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+				if read.is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 					if(seq[qpos] == "A" and quality[qpos] > base_qual):
 						countsAfw[(refpos)-int(start)] += 1
 						covcount +=1
@@ -221,23 +223,23 @@ else:
 						countsTfw[(refpos)-int(start)] += 1
 						covcount +=1
 						qualTfw[int(refpos)-int(start)] += quality[qpos]
-		        if is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
-		            if(seq[qpos] == "A" and quality[qpos] > base_qual):
+				if read.is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+					if(seq[qpos] == "A" and quality[qpos] > base_qual):
 						countsArv[(refpos)-int(start)] += 1
 						covcount +=1
 						qualArv[int(refpos)-int(start)] += quality[qpos]
 					elif(seq[qpos] == "C" and quality[qpos] > base_qual):
-						countsCvr[(refpos)-int(start)] += 1
+						countsCrv[(refpos)-int(start)] += 1
 						covcount +=1
 						qualCrv[int(refpos)-int(start)] += quality[qpos]
 					elif(seq[qpos] == "G" and quality[qpos] > base_qual):
-						countsGvr[(refpos)-int(start)] += 1
+						countsGrv[(refpos)-int(start)] += 1
 						covcount +=1
 						qualGrv[int(refpos)-int(start)] += quality[qpos]
 					elif(seq[qpos] == "T" and quality[qpos] > base_qual):
 						countsTrv[(refpos)-int(start)] += 1
 						covcount +=1
-						qualT[int(refpos)-int(start)] += quality[qpos]
+						qualTrv[int(refpos)-int(start)] += quality[qpos]
 		
 		meanQualAfw = [round(x/y,1) for x, y in zip(qualAfw, countsAfw)]
 		meanQualCfw = [round(x/y,1) for x, y in zip(qualCfw, countsCfw)]
@@ -268,7 +270,7 @@ else:
 		writeSparseMatrix2("G", countsGfw, countsGrv, meanQualGfw, meanQualGrv)
 		writeSparseMatrix2("T", countsTfw, countsTrv, meanQualTfw, meanQualTrv)
 		
-		zipped_list = zip(list(countsAfw),list(countsCfw),list(countsGfw),list(countsTrv),countsArv),list(countsCrv),list(countsGrv),list(countsTrv))
+		zipped_list = zip(list(countsAfw),list(countsCfw),list(countsGfw),list(countsTrv),list(countsArv),list(countsCrv),list(countsGrv),list(countsTrv))
 		sums = [sum(item) for item in zipped_list]
 		writeSparseMatrix("coverage", sums)
 		depth = covcount/n #n = region length
@@ -280,16 +282,16 @@ else:
 	
 refmat = [] * n
 tempindex = 0
-with open("filename") as fasta:
-    for line in fasta:  
-       if ">" not in line:
+with open(reffile) as fasta:
+	for line in fasta:  
+		if ">" not in line:
 		   for ch in line:
-			   if tempindex < maxBP-1:  
-				      refmat[tempindex] = str(ch)
-					  tempindex += 1
+			   if tempindex < maxBP:  
+				   refmat[tempindex] = str(ch)
+				   tempindex += 1
 with open("ref.txt","w") as fasta:
-				for i in range(start,maxBP):
-					fasta.write(str(i)+"\t"+str(refmat[i-1])+"\n")
+	for i in range(start,maxBP):
+		fasta.write(str(i)+"\t"+str(refmat[i-1])+"\n")
 # =============================================================================
 # combines all pileupfiles
 # =============================================================================
