@@ -22,6 +22,8 @@ parser.add_argument("-ref", "--reference", help = "please supply a reference fil
 parser.add_argument("-bq", "--basequality", help="min basequality for filtering", type=float, default=0)
 parser.add_argument("-ebq", "--excludebasequality", help="exclude basequality from outputfiles, default = true", type=bool, default= True)
 parser.add_argument("-al", "--alignmentquality", help="min basequality for filtering", type=float, default=0)
+parser.add_argument("-cov", "--coveragefile", help="outputs coverage summary as pdf, default = False", type=bool, default= False)
+
 args = parser.parse_args()
 
 
@@ -36,10 +38,30 @@ alignment_quality = args.alignmentquality
 start1 = args.rstart
 maxBP = args.rend
 reffile = args.reference
+coverageout = args.coveragefile
 
 # =============================================================================
 # piles up the counts for every bam file in dir
 # =============================================================================
+
+def writeSparseMatrix(mid, vec):
+			with open(outpre + "."+mid+".txt","w") as V:
+				for i in range(0,n2):
+					if(vec[i] > 0):
+						V.write(str(i+start+1)+","+sample+","+str(vec[i])+"\n")
+		
+		
+def writeSparseMatrix2(mid, vec1, vec2):
+	with open(outpre + "."+mid+".txt","w") as V:
+		for i in range(0,n2):
+			if(vec1[i] > 0):
+				V.write(str(i+start+1)+","+sample+","+str(vec1[i])+","+str(vec2[i])+"\n")
+
+def writeSparseMatrix3(mid, vec):
+	with open(outpre + "."+mid+".txt","w") as V:
+		for i in range(0,n2):
+			if(vec[i] > 0):
+				V.write(sample+","+str(vec[i])+"\n")
 
 if ebq == True:
 	for filename in glob.iglob(file_dir + '**/*.bam', recursive=True):
@@ -48,24 +70,7 @@ if ebq == True:
 		n2 = n - 1
 		sample = str(filename)
 		# Export Functions
-		def writeSparseMatrix(mid, vec):
-			with open(outpre + "."+mid+".txt","w") as V:
-				for i in range(0,n2):
-					if(vec[i] > 0):
-						V.write(str(i+start+1)+","+sample+","+str(vec[i])+"\n")
 		
-		
-		def writeSparseMatrix2(mid, vec1, vec2):
-			with open(outpre + "."+mid+".txt","w") as V:
-				for i in range(0,n2):
-					if(vec1[i] > 0):
-						V.write(str(i+start+1)+","+sample+","+str(vec1[i])+","+str(vec2[i])+"\n")
-		
-		def writeSparseMatrix3(mid, vec):
-			with open(outpre + "."+mid+".txt","w") as V:
-				for i in range(0,n2):
-					if(vec[i] > 0):
-						V.write(sample+","+str(vec[i])+"\n")
 		
 		# BAQ
 		
@@ -92,8 +97,10 @@ if ebq == True:
 			seq = read.seq
 			quality = read.query_qualities
 			align_qual_read = read.mapping_quality
+			readrv = read.is_reverse
+
 			for qpos, refpos in read.get_aligned_pairs(True):
-				if read.is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+				if readrv == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 					if(seq[qpos] == "A" and quality[qpos] > base_qual):
 						countsAfw[(refpos)-int(start)] += 1
 						covcount +=1
@@ -106,7 +113,7 @@ if ebq == True:
 					elif(seq[qpos] == "T" and quality[qpos] > base_qual):
 						countsTfw[(refpos)-int(start)] += 1
 						covcount +=1
-				if read.is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+				if readrv == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 					if(seq[qpos] == "A" and quality[qpos] > base_qual):
 						countsArv[(refpos)-int(start)] += 1
 						covcount +=1
@@ -152,24 +159,6 @@ else:
 		n2 = n - 1
 		sample = str(filename)
 		# Export Functions
-		def writeSparseMatrix(mid, vec):
-			with open(outpre + "."+mid+".txt","w") as V:
-				for i in range(0,n2):
-					if(vec[i] > 0):
-						V.write(str(i+start+1)+","+sample+","+str(vec[i])+"\n")
-		
-		
-		def writeSparseMatrix2(mid, vec1, vec2, vec3, vec4):
-			with open(outpre + "."+mid+".txt","w") as V:
-				for i in range(0,n2):
-					if(vec1[i] > 0):
-						V.write(str(i+start+1)+","+sample+","+str(vec1[i])+","+str(vec3[i])+","+str(vec2[i])+","+str(vec4[i])+"\n")
-		
-		def writeSparseMatrix3(mid, vec):
-			with open(outpre + "."+mid+".txt","w") as V:
-				for i in range(0,n2):
-					if(vec[i] > 0):
-						V.write(sample+","+str(vec[i])+"\n")
 		
 		# BAQ
 		
@@ -205,8 +194,9 @@ else:
 			seq = read.seq
 			quality = read.query_qualities
 			align_qual_read = read.mapping_quality
+			readrv = read.is_reverse
 			for qpos, refpos in read.get_aligned_pairs(True):
-				if read.is_reverse() == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+				if readrv == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 					if(seq[qpos] == "A" and quality[qpos] > base_qual):
 						countsAfw[(refpos)-int(start)] += 1
 						covcount +=1
@@ -223,7 +213,7 @@ else:
 						countsTfw[(refpos)-int(start)] += 1
 						covcount +=1
 						qualTfw[int(refpos)-int(start)] += quality[qpos]
-				if read.is_reverse() == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+				if readrv == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
 					if(seq[qpos] == "A" and quality[qpos] > base_qual):
 						countsArv[(refpos)-int(start)] += 1
 						covcount +=1
