@@ -52,9 +52,14 @@ keep = args.keep
 
 
 
+
 temppath = outpre + "temp/"
+temppathbams = temppath + "bams/"
 if not os.path.exists(temppath):
 		   os.makedirs(temppath)
+if not os.path.exists(temppathbams):
+		   os.makedirs(temppathbams)		   
+		   
 start = int(start1) - 1 #if a sam file is provided add 1 due to 1 indexing
 n = (int(maxBP) - int(start)) + 1 #region length
 n2 = n - 1
@@ -83,8 +88,8 @@ def writeSparseMatrix2(mid, vec1, vec2, sample1):
 def writeSparseMatrix4(mid, vec1, vec2, vec3, vec4, sample1):
 	with open(temppath + sample1+ "."+mid+".txt","w") as V:
 		for i in range(0,n2):
-			if(vec1[i] > 0 or vec2[i] > 0):
-				V.write(str(i+start+1)+","+sample1+","+str(vec1[i])+","+str(vec3[i])+","+str(vec2[i])+","+str(vec4[i])+"\n")
+			if(vec1[i] > 0 or vec3[i] > 0):
+				V.write(str(i+start+1)+","+sample1+","+str(vec1[i])+","+str(vec2[i])+"\n")
 		V.close()
 
 
@@ -109,7 +114,71 @@ def outputcountsummary(filename,countsfw,countsrv,countstot,depthstat):
 		
 		plt.close()
 
-for filename in glob.iglob(file_dir + '**/*.bam', recursive=True):
+def filterreads(bamfile):
+	
+		sampletemp = str(os.path.splitext(os.path.basename(bamfile))[0])
+		logfile = temppathbams + sampletemp +".filteredreadslog.txt"
+		proper_pair = False
+		NHmax = 1
+		NMmax = 4
+		
+		# https://github.com/pysam-developers/pysam/issues/509
+		bam = pysam.AlignmentFile(bamfile, "rb")
+		out = pysam.AlignmentFile(temppathbams + sampletemp +".rf.bam", "wb", template = bam)
+		
+		
+		
+		def filterReadTags(intags):
+		    '''
+		    Checks for aligner-specific read tags and filters
+			'''
+			
+		    for tg in intags:
+		    	if(('NH' == tg[0] and int(tg[1]) > int(NHmax)) or \
+		    		(('NM' == tg[0] or 'nM' == tg[0]) and int(tg[1]) > int(NMmax))):
+		        		return(False)
+		    return(True)
+		
+		def pairing(read):
+			'''
+			Check if read is paired, properly paired, etc.
+			'''
+			
+			if(proper_pair != "True"): # then user doesn't care to filter it
+				return(True)
+			else:
+				return(read.is_proper_pair)
+		
+		def processRead(read):
+			global keepCount
+			global filtCount
+			if(filterReadTags(read.tags) and pairing(read)):
+				keepCount += 1
+				out.write(read)
+			else:
+				filtCount += 1
+		
+		for read in bam:
+			processRead(read)
+		
+		with open(logfile , 'w') as outfile:
+			outfile.write("Kept "+ str(keepCount) + "," +sampletemp+","+ "Removed " + str(filtCount)+ "\n")
+
+
+
+keepCount = 0
+filtCount = 0
+
+for filename in glob.iglob(file_dir + '**/*.bam', recursive=False):
+	filterreads(filename)
+	keepCount = 0
+	filtCount = 0
+for filename in glob.iglob(temppathbams + '**/*.bam', recursive=True):
+	pysam.index(filename)
+
+
+
+for filename in glob.iglob(temppathbams + '**/*.bam', recursive=True):
 	sample = str(os.path.splitext(os.path.basename(filename))[0])
 	
 	# BAQ
@@ -284,7 +353,7 @@ with open(reffile) as fasta:
 
 dirname = os.path.dirname(os.path.abspath(__file__))
 pileupcomb = os.path.join(dirname, '02_merge_pileup_counts.sh')
-subprocess.check_call("sh "+pileupcomb + " %s %s %s" % (str(temppath), str(name), str(outpre)), shell=True)
+subprocess.check_call("sh "+pileupcomb + " %s %s %s %s" % (str(temppath), str(name), str(outpre), str(temppathbams)), shell=True)
 
 merger = PdfFileMerger()
 for pdf in glob.iglob(temppath + '**/*.pdf', recursive=True):
