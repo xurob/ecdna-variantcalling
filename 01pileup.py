@@ -76,15 +76,15 @@ def writeSparseMatrix(mid, vec, sample1):
 def writeSparseMatrix2(mid, vec1, vec2, sample1):
 	with open(temppath + sample1+ "."+mid+".txt","w") as V:
 		for i in range(0,n2):
-			if(vec1[i] > 0):
+			if(vec1[i] > 0 or vec2[i] > 0):
 				V.write(str(i+start+1)+","+sample1+","+str(vec1[i])+","+str(vec2[i])+"\n")
 		V.close()
 
 def writeSparseMatrix4(mid, vec1, vec2, vec3, vec4, sample1):
 	with open(temppath + sample1+ "."+mid+".txt","w") as V:
 		for i in range(0,n2):
-			if(vec1[i] > 0):
-				V.write(str(i+start+1)+","+sample1+","+str(vec1[i])+","+str(vec2[i])+"\n")
+			if(vec1[i] > 0 or vec2[i] > 0):
+				V.write(str(i+start+1)+","+sample1+","+str(vec1[i])+","+str(vec3[i])+","+str(vec2[i])+","+str(vec4[i])+"\n")
 		V.close()
 
 
