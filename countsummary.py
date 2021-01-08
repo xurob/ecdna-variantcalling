@@ -60,7 +60,9 @@ filename = "PATH/TO/BAMFILE"
 #count for each base on each aligned read in the target region
 
 '''
+counter
 +=1 for every base counted at the respective reference position on the respective strand
+iterates over every read
 '''
 
 bam = pysam.AlignmentFile(filename, "rb")
@@ -120,7 +122,7 @@ countsrv = [ (int(round(elem))*-1) for elem in countsrv ]
 
 
 zipped_list = zip(list(countsAfw),list(countsCfw),list(countsGfw),list(countsTfw),list(countsArv),list(countsCrv),list(countsGrv),list(countsTrv))
-sums = [sum(item) for item in zipped_list]
+sums = [sum(item) for item in zipped_list] #total counts; sum of every base on both strands
 depth = covcount/n #n = region length
 
 outputcountsummary(filename, countsfw, countsrv, sums, depth) 
