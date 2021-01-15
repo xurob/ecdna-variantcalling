@@ -9,7 +9,6 @@ import shutil
 import pysam
 import argparse
 import subprocess
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from PyPDF2 import PdfFileMerger
@@ -92,7 +91,7 @@ def writeSparseMatrix4(mid, vec1, vec2, vec3, vec4, sample1):
 
 def writeSparseMatrix3(mid, vec, sample1):
 	with open(temppath + sample1+ "." +mid+".txt","w") as V:
-				V.write(sample1+","+str(vec)+"\n")
+				V.write(sample1+"\t"+str(vec)+"\n")
 				V.close()
 
 
@@ -322,7 +321,7 @@ with os.scandir(temppathbams) as dir:
 			sums = [sum(item) for item in zipped_list]
 			writeSparseMatrix("coverage", sums, sample)
 			depth = covcount/n #n = region length
-			writeSparseMatrix3("depth", depth, sample)
+			writeSparseMatrix3("depthTable", depth, sample)
 			if coverageout == True:
 					outputcountsummary(sample, countsfw, countsrv, sums, depth)
 	
@@ -341,7 +340,7 @@ os.rename(reffiletemp, base1 + ".txt")
 start2 = int(start1)
 tempindex = 0
 with open(reffile) as fasta:
-	with open(outpre + "ref.txt","w") as fasta1:
+	with open(outpre + "REF_refAllele.txt","w") as fasta1:
 		for line in fasta:  
 			if ">" not in line:
 			   for ch in line:
@@ -373,3 +372,7 @@ with os.scandir(temppath) as dir:
 # =============================================================================
 # call R Script for creating SE Object
 # =============================================================================
+
+#dirname = os.path.dirname(os.path.abspath(__file__))
+#makeRDS = os.path.join(dirname, 'makeRDSmgatk.R')
+#subprocess.check_call("Rscript "+makeRDS + " %s %s" % (str(outpre), str(name)), shell=True)
