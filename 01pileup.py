@@ -27,6 +27,7 @@ parser.add_argument("-ebq", "--excludebasequality", help="exclude basequality fr
 parser.add_argument("-al", "--alignmentquality", help="min basequality for filtering", type=float, default=0)
 parser.add_argument("-cov", "--coveragefile", help="outputs coverage summary as pdf, default = False", type=bool, default= False)
 parser.add_argument("-k", "--keep", help="keep temp files, default = true", type=bool, default= True)
+parser.add_argument("-chr", "--chromosome", help="keep temp files")
 
 args = parser.parse_args()
 
@@ -44,7 +45,7 @@ maxBP = args.rend
 reffile = args.reference
 coverageout = args.coveragefile
 keep = args.keep
-
+chromosome = args.chromosome
 
 
 
@@ -52,11 +53,13 @@ keep = args.keep
 
 temppath = str(outpre) + "temp/"
 temppathbams = str(temppath) + "bams/"
+temppathbams2 = str(temppath) + "bams/bams_unsorted/"
 if not os.path.exists(temppath):
 		   os.makedirs(temppath)
 if not os.path.exists(temppathbams):
 		   os.makedirs(temppathbams)		   
-		   
+if not os.path.exists(temppathbams2):
+		   os.makedirs(temppathbams2)
 start = int(start1) - 1 #if a sam file is provided add 1 due to 1 indexing
 n = (int(maxBP) - int(start)) + 1 #region length
 n2 = n - 1
@@ -70,7 +73,7 @@ def writeSparseMatrix(mid, vec, sample1):
 		with open(temppath + sample1+"."+mid+".txt","w") as V:
 			for i in range(0,n2):
 				if(vec[i] > 0):
-					V.write(str(i+start+1)+","+sample1+","+str(vec[i])+"\n")
+					V.write(str(i+1)+","+sample1+","+str(vec[i])+"\n")
 			V.close()
 	
 	
@@ -78,14 +81,14 @@ def writeSparseMatrix2(mid, vec1, vec2, sample1):
 	with open(temppath + sample1+ "."+mid+".txt","w") as V:
 		for i in range(0,n2):
 			if(vec1[i] > 0 or vec2[i] > 0):
-				V.write(str(i+start+1)+","+sample1+","+str(vec1[i])+","+str(vec2[i])+"\n")
+				V.write(str(i+1)+","+sample1+","+str(vec1[i])+","+str(vec2[i])+"\n")
 		V.close()
 
 def writeSparseMatrix4(mid, vec1, vec2, vec3, vec4, sample1):
 	with open(temppath + sample1+ "."+mid+".txt","w") as V:
 		for i in range(0,n2):
 			if(vec1[i] > 0 or vec3[i] > 0):
-				V.write(str(i+start+1)+","+sample1+","+str(vec1[i])+","+str(vec2[i])+"\n")
+				V.write(str(i+1)+","+sample1+","+str(vec1[i])+","+str(vec2[i])+"\n")
 		V.close()
 
 
@@ -120,7 +123,7 @@ def filterreads(bamfile):
 		
 		# https://github.com/pysam-developers/pysam/issues/509
 		bam = pysam.AlignmentFile(bamfile, "rb")
-		out = pysam.AlignmentFile(temppathbams + sampletemp +".rf.bam", "wb", template = bam)
+		out = pysam.AlignmentFile(temppathbams2 + sampletemp +".rf.bam", "wb", template = bam)
 		
 		
 		
@@ -148,7 +151,7 @@ def filterreads(bamfile):
 		def processRead(read):
 			global keepCount
 			global filtCount
-			if(filterReadTags(read.tags) and pairing(read)):
+			if(filterReadTags(read.tags) and pairing(read) and read.reference_name == chromosome):
 				keepCount += 1
 				out.write(read)
 			else:
@@ -173,11 +176,15 @@ with os.scandir(file_dir) as dir:
 			filterreads(filename)
 			keepCount = 0
 			filtCount = 0
+with os.scandir(temppathbams2) as dir:
+	for file in dir:
+		if file.name.endswith(".bam"):
+			filename1 = str(os.path.splitext(os.path.basename(file))[0])
+			pysam.sort("-o", temppathbams + filename1 + ".bam", file.path)
 with os.scandir(temppathbams) as dir:
 	for file in dir:
 		if file.name.endswith(".bam"):
 			pysam.index(file.path)
-
 
 
 
@@ -227,8 +234,9 @@ with os.scandir(temppathbams) as dir:
 				quality = read.query_qualities
 				align_qual_read = read.mapping_quality
 				readrv = read.is_reverse
+				duplicate = read.is_duplicate
 				for qpos, refpos in read.get_aligned_pairs(True):
-					if readrv == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+					if readrv == False and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP) and not duplicate:
 						if(seq[qpos] == "A" and quality[qpos] > base_qual):
 							countsAfw[(refpos)-int(start)] += 1
 							covcount +=1
@@ -253,7 +261,7 @@ with os.scandir(temppathbams) as dir:
 							qualTfw[int(refpos)-int(start)] += quality[qpos]
 							countsfw[int(refpos)-int(start)] +=1
 							countstot[int(refpos)-int(start)] +=1
-					if readrv == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP):
+					if readrv == True and qpos is not None and refpos is not None and align_qual_read > alignment_quality and int(start) <= int(refpos) <= int(maxBP) and not duplicate:
 						if(seq[qpos] == "A" and quality[qpos] > base_qual):
 							countsArv[(refpos)-int(start)] += 1
 							covcount +=1
@@ -339,6 +347,7 @@ base1 = os.path.splitext(reffiletemp)[0]
 os.rename(reffiletemp, base1 + ".txt")
 start2 = int(start1)
 tempindex = 0
+counter = 1
 with open(reffile) as fasta:
 	with open(outpre + "REF_refAllele.txt","w") as fasta1:
 		for line in fasta:  
@@ -347,7 +356,8 @@ with open(reffile) as fasta:
 				   if tempindex < maxBP and str(ch) != "\n":  
 					   tempindex += 1
 					   if(tempindex in range(start2,maxBP+1)):
-							   fasta1.write(str(tempindex)+"\t"+str(ch)+"\n")
+							   fasta1.write(str(counter)+"\t"+str(ch)+"\n")
+							   counter +=1
 		if(tempindex > maxBP):
 				fasta1.close()
 				fasta.close()
